@@ -1,0 +1,11 @@
+---
+- name: Update Certificates
+  hosts: certificatehosts
+  gather_facts: false
+
+  tasks:
+    - debug:
+        var: certmgmt_ca_type
+    - name: Create certificate from LetsEncrypt
+      ansible.builtin.include_role:
+        name: create_cert

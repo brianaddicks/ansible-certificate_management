@@ -1,0 +1,16 @@
+---
+# tasks file for acme certs
+- name: Generate certs from acme CA
+  vars:
+    ansible_connection: local
+  block:
+    - name: Generate an openssl private key
+      community.crypto.openssl_privatekey:
+        path: '{{ certmgmt_account_key_path }}'
+        return_content: true
+      register: certmgmt_account_key
+
+    - name: Remove private key file
+      ansible.builtin.file:
+        path: '{{ certmgmt_account_key_path }}'
+        state: absent

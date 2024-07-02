@@ -1,0 +1,13 @@
+all:
+  children:
+    hosts:
+      local:
+        vars:
+          ansible_connection: local
+    certificatehosts:
+      vars:
+        certmgmt_ca_type: acme
+      children:
+        paloaltofirewalls:
+          hosts:
+            pan.addicks.us:
