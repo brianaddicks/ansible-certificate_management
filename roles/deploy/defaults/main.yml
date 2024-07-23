@@ -7,3 +7,4 @@ certmgmt_combined_pem_path: "certmgmt_{{ inventory_hostname }}_combined_pem.crt"
 # certmgmt_cert_friendly_name: friendly_name
 certmgmt_private_key_passphrase: redbluegreen
 # certmgmt_private_key_path: certmgmt_priv.key
+certmgmt_paloalto_skip_commit: false

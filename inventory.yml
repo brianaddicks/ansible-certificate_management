@@ -18,10 +18,13 @@ all:
         paloaltofirewalls:
           vars:
             certmgmt_device_type: paloalto
+            # certmgmt_paloalto_skip_commit: true
           hosts:
             pan.example:
               # certmgmt_common_name: '*.example.com'
               # certmgmt_cert_file: ./certmgmt_fullcert.pkcs12
+              # certmgmt_paloalto_template: my_palo_template
+              # certmgmt_paloalto_template_stack: my_palo_template_stack
               certmgmt_paloalto_cert_name: my_pa_certificate_object_name
               certmgmt_paloalto_provider:
                 ip_address: '{{ inventory_hostname }}'

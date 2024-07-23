@@ -25,6 +25,8 @@
             format: 'pem'
             filename: '{{ certmgmt_combined_pem_path }}'
             passphrase: '{{ certmgmt_private_key_passphrase }}'
+            template: '{{ certmgmt_paloalto_template | default(omit) }}'
+            template_stack: '{{ certmgmt_paloalto_template_stack | default(omit) }}'
 
     - name: Import from provided file
       when: certmgmt_cert_file is defined
@@ -37,10 +39,13 @@
             format: 'pkcs12'
             filename: '{{ certmgmt_cert_file }}'
             passphrase: '{{ certmgmt_private_key_passphrase }}'
+            template: '{{ certmgmt_paloalto_template | default(omit) }}'
+            template_stack: '{{ certmgmt_paloalto_template_stack | default(omit) }}'
 
     - name: Commit candidate configs on firewall
       paloaltonetworks.panos.panos_commit_firewall:
         provider: '{{ certmgmt_paloalto_provider }}'
+      when: not certmgmt_paloalto_skip_commit
 
     - name: Clean up files
       ansible.builtin.file:
