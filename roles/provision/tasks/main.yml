@@ -1,7 +1,7 @@
 ---
-# tasks file for create_cert
+# tasks file for provision
 
-# import ca tasks
+# import provision tasks
 - name: Import approriate certificate creation tasks
   ansible.builtin.include_tasks:
-    file: "{{ certmgmt_ca_type }}.yml"
+    file: '{{ certmgmt_ca_type }}.yml'

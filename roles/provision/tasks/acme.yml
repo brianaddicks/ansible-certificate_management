@@ -1,0 +1,77 @@
+---
+# tasks file for acme certs
+# all tasks are in a block just so we can set the ansible_connection to local
+# some of the openssl modules require outputting to a file
+# all files are deleted by the last task
+- name: Generate certs from acme CA
+  vars:
+    ansible_connection: local
+  block:
+    # Load account key from file
+    - name: Get account key from file
+      when: >
+        certmgmt_acme_use_existing_account_key is defined and
+        certmgmt_acme_use_existing_account_key
+      ansible.builtin.set_fact:
+        certmgmt_account_key: "{{ lookup('ansible.builtin.file', certmgmt_acme_account_key_path) }}"
+
+    # Generate new account key
+    - name: Generate new account key
+      when: >
+        certmgmt_acme_use_existing_account_key is not defined or
+        not certmgmt_acme_use_existing_account_key
+      block:
+        - name: Generate account key
+          community.crypto.openssl_privatekey_pipe:
+          register: certmgmt_account_key_new
+
+        - name: Set fact for account key
+          ansible.builtin.set_fact:
+            certmgmt_account_key: '{{ certmgmt_account_key_new.privatekey }}'
+
+    - name: Generate private key
+      community.crypto.openssl_privatekey_pipe:
+        passphrase: '{{ certmgmt_private_key_passphrase }}'
+        cipher: auto
+      register: certmgmt_private_key
+
+    - name: Generate CSR
+      community.crypto.openssl_csr_pipe:
+        privatekey_content: '{{ certmgmt_private_key.privatekey }}'
+        common_name: '{{ certmgmt_common_name }}'
+        subject_alt_name: '{{ certmgmt_san | default(omit) }}'
+        privatekey_passphrase: '{{ certmgmt_private_key_passphrase }}'
+      register: certmgmt_csr
+
+    - name: Initiate challenge with acme server
+      community.crypto.acme_certificate:
+        account_key_content: '{{ certmgmt_account_key }}'
+        account_email: '{{ certmgmt_acme_email }}'
+        csr_content: '{{ certmgmt_csr.csr }}'
+        dest: '{{ certmgmt_cert_dest_path }}'
+        fullchain_dest: '{{ certmgmt_fullchain_dest_path }}'
+        challenge: '{{ certmgmt_acme_challenge_type }}'
+        acme_directory: '{{ certmgmt_acme_directory }}'
+        remaining_days: '{{ certmgmt_acme_remaining_days | default(omit) }}'
+        force: '{{ certmgmt_acme_force | default(omit) }}'
+        acme_version: 2
+        terms_agreed: true
+      register: certmgmt_acme_challenge
+
+    - name: Import approriate challenge task
+      ansible.builtin.include_tasks:
+        file: 'acme_challenge_{{ certmgmt_acme_challenge_type }}.yml'
+
+    - name: Load cert info into variables
+      ansible.builtin.set_fact:
+        certmgmt_fullchain: "{{ lookup('ansible.builtin.file', certmgmt_fullchain_dest_path) }}"
+        certmgmt_new_cert: "{{ lookup('ansible.builtin.file', certmgmt_cert_dest_path) }}"
+
+    - name: Clean up files
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: absent
+      loop:
+        - '{{ certmgmt_fullchain_dest_path }}'
+        - '{{ certmgmt_chain_dest_path }}'
+        - '{{ certmgmt_cert_dest_path }}'

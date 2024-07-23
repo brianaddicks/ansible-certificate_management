@@ -7,7 +7,22 @@ all:
     certificatehosts:
       vars:
         certmgmt_ca_type: acme
+        certmgmt_acme_email: johndoe@example.com
+        certmgmt_acme_challenge_type: dns-01
+        certmgmt_acme_challenge_provider: cloudflare
+        certmgmt_acme_challenge_dns_zone: example.com
+        certmgmt_acme_force: true
+        certmgmt_acme_directory: https://acme-staging-v02.api.letsencrypt.org/directory
+        # certmgmt_acme_use_existing_account_key: true
       children:
         paloaltofirewalls:
+          vars:
+            certmgmt_device_type: paloalto
           hosts:
             pan.addicks.us:
+              # certmgmt_common_name: '*.example.com'
+              # certmgmt_cert_file: ./certmgmt_fullcert.pkcs12
+              certmgmt_paloalto_cert_name: my_pa_certificate_object_name
+              certmgmt_paloalto_provider:
+                ip_address: '{{ inventory_hostname }}'
+                api_key: "{{ lookup('ansible.builtin.env', 'PALO_API_KEY') }}"

@@ -1,0 +1,35 @@
+---
+# tasks file acme dns challenge
+# all tasks are in a block just so we can set the ansible_connection to local
+- name: Process acme DNS challenge
+  vars:
+    ansible_connection: local
+  block:
+    - name: Create DNS record on Cloudflare
+      community.general.cloudflare_dns:
+        domain: '{{ certmgmt_acme_challenge_dns_zone }}'
+        record: "{{ certmgmt_acme_challenge.challenge_data[certmgmt_common_name]['dns-01'].record }}"
+        type: TXT
+        ttl: 120
+        value: "{{ certmgmt_acme_challenge.challenge_data[certmgmt_common_name]['dns-01'].resource_value }}"
+        solo: true
+        state: present
+      register: certmgmt_acme_challenge_status
+      when: certmgmt_acme_challenge_provider == "cloudflare"
+
+    - name: Validate challenge and download certs
+      community.crypto.acme_certificate:
+        account_key_content: '{{ certmgmt_account_key }}'
+        account_email: '{{ certmgmt_acme_email }}'
+        csr_content: '{{ certmgmt_csr.csr }}'
+        dest: '{{ certmgmt_cert_dest_path }}'
+        fullchain_dest: '{{ certmgmt_fullchain_dest_path }}'
+        chain: '{{ certmgmt_chain_dest_path }}'
+        challenge: dns-01
+        acme_directory: '{{ certmgmt_acme_directory }}'
+        remaining_days: '{{ certmgmt_acme_remaining_days | default(omit) }}'
+        force: '{{ certmgmt_acme_force | default(omit) }}'
+        acme_version: 2
+        terms_agreed: true
+        data: '{{ certmgmt_acme_challenge }}'
+      when: certmgmt_acme_challenge_status is changed # noqa: no-handler

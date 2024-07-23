@@ -1,0 +1,10 @@
+---
+# defaults file for provision
+certmgmt_acme_account_key_path: certmgmt_account.key
+# certmgmt_csr_path: certmgmt_csr.csr
+# certmgmt_private_key_path: certmgmt_priv.key
+certmgmt_fullchain_dest_path: certmgmt_fullchain.crt
+certmgmt_chain_dest_path: certmgmt_chain.crt
+certmgmt_cert_dest_path: certmgmt_cert.crt
+certmgmt_acme_directory: https://acme-v02.api.letsencrypt.org/directory
+certmgmt_private_key_passphrase: redbluegreen

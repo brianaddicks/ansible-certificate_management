@@ -1,0 +1,9 @@
+---
+# defaults file for deploy
+# certmgmt_pkcs12_path: certmgmt_fullcert.pkcs12
+certmgmt_combined_pem_path: "certmgmt_{{ inventory_hostname }}_combined_pem.crt"
+# certmgmt_cert_dest_path: certmgmt_cert.crt
+# certmgmt_chain_dest_path: certmgmt_chain.crt
+# certmgmt_cert_friendly_name: friendly_name
+certmgmt_private_key_passphrase: redbluegreen
+# certmgmt_private_key_path: certmgmt_priv.key

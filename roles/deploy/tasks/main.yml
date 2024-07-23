@@ -1,0 +1,6 @@
+---
+# tasks file for deploy
+
+- name: Import approriate certificate deploy tasks
+  ansible.builtin.include_tasks:
+    file: "{{ certmgmt_device_type }}.yml"

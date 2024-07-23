@@ -1,3 +1,0 @@
----
-# defaults file for create_cert
-certmgmt_account_key_path: ./account.key

@@ -24,8 +24,8 @@ Including an example of how to use your role (for instance, with variables passe
 
 ## License
 
-[GPL-3.0](https://github.com/brianaddicks/ansible-certificate_management#licensing)
+BSD
 
-## Author
+## Author Information
 
-[Brian Addicks](https://github.com/sean-m-sullivan)
+An optional section for the role authors to include contact information, or a website (HTML is not allowed).

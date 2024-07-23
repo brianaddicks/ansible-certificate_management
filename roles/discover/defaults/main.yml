@@ -1,0 +1,5 @@
+---
+# defaults file for discover
+certmgmt_paloalto_cert_export_path: "./certmgmt_{{ inventory_hostname }}_pa_export.crt"
+certmgmt_paloalto_cert_export_format: pem
+certmgmt_private_key_passphrase: redbluegreen

@@ -4,8 +4,14 @@
   gather_facts: false
 
   tasks:
-    - debug:
-        var: certmgmt_ca_type
-    - name: Create certificate from LetsEncrypt
+    - name: Discover cert info
       ansible.builtin.include_role:
-        name: create_cert
+        name: discover
+
+    - name: Provision certs
+      ansible.builtin.include_role:
+        name: provision
+
+    - name: Deploy certs
+      ansible.builtin.include_role:
+        name: deploy

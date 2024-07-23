@@ -7,3 +7,10 @@ test
 tests/output
 local-test.yml
 ansible-navigator.log
+inventory.yml
+*.crt
+*.csr
+*.pkcs12
+*.key
+test-inventory.yml
+test-example.yml
