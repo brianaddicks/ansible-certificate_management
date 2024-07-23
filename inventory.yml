@@ -19,7 +19,7 @@ all:
           vars:
             certmgmt_device_type: paloalto
           hosts:
-            pan.addicks.us:
+            pan.example:
               # certmgmt_common_name: '*.example.com'
               # certmgmt_cert_file: ./certmgmt_fullcert.pkcs12
               certmgmt_paloalto_cert_name: my_pa_certificate_object_name
