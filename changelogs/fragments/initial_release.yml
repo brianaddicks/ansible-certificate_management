@@ -1,0 +1,5 @@
+---
+major_changes:
+  - Added Palo Alto to discovery and deploy roles
+  - Added acme to provision role
+  - Added cloudflare dns provider to provision role
