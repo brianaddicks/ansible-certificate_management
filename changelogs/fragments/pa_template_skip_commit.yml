@@ -1,5 +1,5 @@
 ---
-minor_changes
-- Added certmgmt_paloalto_template parameter to deploy role
-- Added certmgmt_paloalto_template_stack parameter to deploy role
-- Added certmgmt_paloalto_skip_commit parameter to deploy role
+minor_changes:
+  - Added certmgmt_paloalto_template parameter to deploy role
+  - Added certmgmt_paloalto_template_stack parameter to deploy role
+  - Added certmgmt_paloalto_skip_commit parameter to deploy role
