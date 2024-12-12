@@ -1,0 +1,32 @@
+---
+# tasks file for haproxy
+
+# - name: Gather information from Palo Alto
+#   block:
+#     - name: Export certificate from PA
+#       paloaltonetworks.panos.panos_export:
+#         provider: '{{ certmgmt_paloalto_provider }}'
+#         category: certificate
+#         certificate_name: '{{ certmgmt_paloalto_cert_name }}'
+#         certificate_format: '{{ certmgmt_paloalto_cert_export_format }}'
+#         filename: '{{ certmgmt_paloalto_cert_export_path }}'
+
+#     - name: Read exported cert into variable
+#       ansible.builtin.set_fact:
+#         certmgmt_paloalto_exported_cert: "{{ lookup('ansible.builtin.file', certmgmt_paloalto_cert_export_path) }}"
+
+#     - name: Clean up files
+#       ansible.builtin.file:
+#         path: '{{ item }}'
+#         state: absent
+#       loop:
+#         - '{{ certmgmt_paloalto_cert_export_path }}'
+
+#     - name: Parse information from cert
+#       community.crypto.x509_certificate_info:
+#         content: '{{ certmgmt_paloalto_exported_cert }}'
+#       register: certmgmt_paloalto_exported_cert_info
+
+#     - name: Set facts for provision role
+#       ansible.builtin.set_fact:
+#         certmgmt_common_name: '{{ certmgmt_paloalto_exported_cert_info.subject.commonName }}'
