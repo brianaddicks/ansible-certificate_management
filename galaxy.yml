@@ -1,0 +1,23 @@
+---
+namespace: brianaddicks
+name: certificate_management
+version: 1.0.0
+description: Ansible roles to manage SSL certificates.
+readme: README.md
+authors:
+  - Brian Addicks @brianaddicks
+
+repository: https://github.com/brianaddicks/ansible-certificate_management
+issues: https://github.com/brianaddicks/ansible-certificate_management/issues
+build_ignore:
+  - galaxy.yml.j2
+  - release.yml
+  - .github
+  - .ansiblelint.yml
+  - .yamllint.yml
+  - '*.tar.gz'
+license:
+  - GPL-3.0-or-later
+tags:
+  - mssql
+  - collection
