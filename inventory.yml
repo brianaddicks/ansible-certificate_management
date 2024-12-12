@@ -12,7 +12,8 @@ all:
         certmgmt_acme_challenge_provider: cloudflare
         certmgmt_acme_challenge_dns_zone: example.com
         certmgmt_acme_force: true
-        certmgmt_acme_directory: https://acme-staging-v02.api.letsencrypt.org/directory
+        # certmgmt_acme_directory: https://acme-staging-v02.api.letsencrypt.org/directory
+        # certmgmt_acme_directory: https://acme-v02.api.letsencrypt.org/directory
         # certmgmt_acme_use_existing_account_key: true
       children:
         paloaltofirewalls:
