@@ -17,9 +17,9 @@
       register: certmgmt_acme_challenge_status
       when: certmgmt_acme_challenge_provider == "cloudflare"
 
-    - name: Give DNS TTL a minute
-      ansible.builtin.pause:
-        seconds: 60
+    # - name: Give DNS TTL a minute
+    #   ansible.builtin.pause:
+    #     seconds: 60
 
     - name: Validate challenge and download certs
       when: certmgmt_acme_challenge_status is changed # noqa: no-handler

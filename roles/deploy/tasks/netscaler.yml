@@ -1,0 +1,55 @@
+---
+# tasks file for netscaler/adc
+# all tasks are in a block just so we can set the ansible_connection to local
+
+- name: Import certificate to Palo Alto
+  vars:
+      ansible_connection: local
+  block:
+      - name: Use generated certificate
+        when: certmgmt_cert_file is not defined
+        block:
+            - name: Write combined PEM file
+              ansible.builtin.copy:
+                  dest: '{{ certmgmt_combined_pem_path }}'
+                  mode: '0600'
+                  content: |
+                      {{ certmgmt_fullchain }}
+                      {{ certmgmt_private_key.privatekey }}
+
+            - name: Import generated certificate
+              paloaltonetworks.panos.panos_import:
+                  provider: '{{ certmgmt_paloalto_provider }}'
+                  category: 'keypair'
+                  certificate_name: '{{ certmgmt_paloalto_cert_name }}'
+                  format: 'pem'
+                  filename: '{{ certmgmt_combined_pem_path }}'
+                  passphrase: '{{ certmgmt_private_key_passphrase }}'
+                  template: '{{ certmgmt_paloalto_template | default(omit) }}'
+                  template_stack: '{{ certmgmt_paloalto_template_stack | default(omit) }}'
+
+      - name: Import from provided file
+        when: certmgmt_cert_file is defined
+        block:
+            - name: Import from provided file
+              paloaltonetworks.panos.panos_import:
+                  provider: '{{ certmgmt_paloalto_provider }}'
+                  category: 'keypair'
+                  certificate_name: '{{ certmgmt_paloalto_cert_name }}'
+                  format: 'pkcs12'
+                  filename: '{{ certmgmt_cert_file }}'
+                  passphrase: '{{ certmgmt_private_key_passphrase }}'
+                  template: '{{ certmgmt_paloalto_template | default(omit) }}'
+                  template_stack: '{{ certmgmt_paloalto_template_stack | default(omit) }}'
+
+      - name: Commit candidate configs on firewall
+        paloaltonetworks.panos.panos_commit_firewall:
+            provider: '{{ certmgmt_paloalto_provider }}'
+        when: not certmgmt_paloalto_skip_commit
+
+      - name: Clean up files
+        ansible.builtin.file:
+            path: '{{ item }}'
+            state: absent
+        loop:
+            - '{{ certmgmt_combined_pem_path }}'

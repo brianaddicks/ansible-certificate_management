@@ -1,16 +1,16 @@
 ---
 - name: Update Certificates
-  hosts: certificatehosts
+  hosts: paloaltofirewalls
   gather_facts: false
 
   tasks:
-    - name: Discover cert info
-      ansible.builtin.include_role:
-        name: discover
+    # - name: Discover cert info
+    #   ansible.builtin.include_role:
+    #     name: discover
 
-    - name: Provision certs
-      ansible.builtin.include_role:
-        name: provision
+    # - name: Provision certs
+    #   ansible.builtin.include_role:
+    #     name: provision
 
     - name: Deploy certs
       ansible.builtin.include_role:

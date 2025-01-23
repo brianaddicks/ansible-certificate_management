@@ -1,0 +1,15 @@
+---
+# tasks file for hashicorp vaultd deployment
+# all tasks are in a block just so we can set the ansible_connection to local
+
+- name: Write certificate to Hashicorp Vault
+  vars:
+    ansible_connection: local
+  block:
+    - name: Write/create a secret
+      community.hashi_vault.vault_write:
+        path: '{{ certmgmt_vault_path }}'
+        data:
+          private_key: '{{ certmgmt_private_key }}'
+          certificate: '{{ certmgmt_new_cert }}'
+          chain: '{{ certmgmt_fullchain }}'

@@ -15,7 +15,7 @@
             mode: '0600'
             content: |
               {{ certmgmt_fullchain }}
-              {{ certmgmt_private_key.privatekey }}
+              {{ certmgmt_private_key }}
 
         - name: Import generated certificate
           paloaltonetworks.panos.panos_import:

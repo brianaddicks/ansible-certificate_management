@@ -14,3 +14,5 @@ inventory.yml
 *.key
 test-inventory.yml
 test-example.yml
+ns-inventory.yml
+ns-*

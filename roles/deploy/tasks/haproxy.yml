@@ -1,15 +1,17 @@
 ---
-# tasks file for palo alto discovery
+# tasks file for haproxy discovery
 # all tasks are in a block just so we can set the ansible_connection to local
 
 - name: Copy certificate to haproxy host
   when: certmgmt_cert_file is not defined
   block:
     - name: Decrypt private key
+      no_log: true
       community.crypto.openssl_privatekey_info:
         content: '{{ certmgmt_private_key.privatekey }}'
         passphrase: '{{ certmgmt_private_key_passphrase }}'
         return_private_key_data: true
+
     # - name: Use generated certificate
     #   block:
     #     - name: Write combined PEM file

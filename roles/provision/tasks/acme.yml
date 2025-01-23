@@ -66,6 +66,7 @@
       ansible.builtin.set_fact:
         certmgmt_fullchain: "{{ lookup('ansible.builtin.file', certmgmt_fullchain_dest_path) }}"
         certmgmt_new_cert: "{{ lookup('ansible.builtin.file', certmgmt_cert_dest_path) }}"
+        certmgmt_private_key: "{{ certmgmt_private_key.privatekey }}"
 
     - name: Clean up files
       ansible.builtin.file:
