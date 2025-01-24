@@ -9,12 +9,20 @@
     - name: Use generated certificate
       when: certmgmt_cert_file is not defined
       block:
+        - name: Set facts
+          ansible.builtin.set_fact:
+            certmgmt_private_key: '{{ item.certmgmt_private_key }}'
+            certmgmt_cert: '{{ item.certmgmt_cert }}'
+            certmgmt_chain: '{{ item.certmgmt_chain }}'
+            certmgmt_paloalto_cert_name: '{{ item.certmgmt_paloalto_cert_name }}'
+
         - name: Write combined PEM file
           ansible.builtin.copy:
             dest: '{{ certmgmt_combined_pem_path }}'
             mode: '0600'
             content: |
-              {{ certmgmt_fullchain }}
+              {{ certmgmt_cert }}
+              {{ certmgmt_chain }}
               {{ certmgmt_private_key }}
 
         - name: Import generated certificate

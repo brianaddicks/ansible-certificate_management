@@ -1,6 +1,6 @@
 ---
-- name: Update Certificates
-  hosts: paloaltofirewalls
+- name: Update certificates in Vault
+  hosts: hashivault
   gather_facts: false
 
   tasks:
@@ -8,10 +8,19 @@
     #   ansible.builtin.include_role:
     #     name: discover
 
-    # - name: Provision certs
-    #   ansible.builtin.include_role:
-    #     name: provision
+    - name: Provision certs
+      ansible.builtin.include_role:
+        name: provision
 
     - name: Deploy certs
       ansible.builtin.include_role:
         name: deploy
+
+# - name: Update Certificates
+#   hosts: paloaltofirewalls
+#   gather_facts: false
+
+#   tasks:
+#     - name: Deploy certs
+#       ansible.builtin.include_role:
+#         name: deploy

@@ -5,30 +5,38 @@
   vars:
     ansible_connection: local
   block:
-    - name: Create DNS record on Cloudflare
+    - name: '{{ item.certmgmt_common_name }}: Create DNS record on Cloudflare'
+      when: certmgmt_acme_challenge_provider == "cloudflare"
       community.general.cloudflare_dns:
         domain: '{{ certmgmt_acme_challenge_dns_zone }}'
-        record: "{{ certmgmt_acme_challenge.challenge_data[certmgmt_common_name]['dns-01'].record }}"
+        record: '{{ item.key }}'
         type: TXT
-        ttl: 1
-        value: "{{ certmgmt_acme_challenge.challenge_data[certmgmt_common_name]['dns-01'].resource_value }}"
+        ttl: 60
+        value: '{{ item.value[0] }}'
         solo: true
         state: present
       register: certmgmt_acme_challenge_status
-      when: certmgmt_acme_challenge_provider == "cloudflare"
+      loop: '{{ certmgmt_acme_challenge.challenge_data_dns | ansible.builtin.dict2items }}'
 
-    # - name: Give DNS TTL a minute
-    #   ansible.builtin.pause:
-    #     seconds: 60
+    #     - name: Debug output
+    # ansible.builtin.debug:
+    #   msg:
+    #     - '{{ item.key }}'
+    #     - '{{ item.value[0] }}'
+    # loop: '{{ certmgmt_acme_challenge.challenge_data_dns | ansible.builtin.dict2items }}'
 
-    - name: Validate challenge and download certs
+    - name: '{{ item.certmgmt_common_name }}: Give DNS records 60 seconds'
+      ansible.builtin.pause:
+        seconds: 60
+
+    - name: '{{ item.certmgmt_common_name }}: Validate challenge and download certs'
       when: certmgmt_acme_challenge_status is changed # noqa: no-handler
       retries: 4
       delay: 15
       register: result
       until: result is not failed
       community.crypto.acme_certificate:
-        account_key_content: '{{ certmgmt_account_key }}'
+        account_key_content: '{{ certmgmt_acme_account_key }}'
         account_email: '{{ certmgmt_acme_email }}'
         csr_content: '{{ certmgmt_csr.csr }}'
         dest: '{{ certmgmt_cert_dest_path }}'
@@ -40,9 +48,10 @@
         force: '{{ certmgmt_acme_force | default(omit) }}'
         acme_version: 2
         terms_agreed: true
+        deactivate_authzs: true
         data: '{{ certmgmt_acme_challenge }}'
 
-    - name: Delete DNS record on Cloudflare
+    - name: '{{ item.certmgmt_common_name }}: Delete DNS record on Cloudflare'
       when: certmgmt_acme_challenge_status is changed # noqa: no-handler
       community.general.cloudflare_dns:
         domain: '{{ certmgmt_acme_challenge_dns_zone }}'

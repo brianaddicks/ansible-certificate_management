@@ -15,5 +15,6 @@ exclude_paths:
 skip_list:
   - yaml[line-length]
   - jinja[invalid]
+  - name[template]
 parseable: true
 use_default_rules: true

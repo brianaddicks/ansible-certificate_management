@@ -6,10 +6,25 @@
   vars:
     ansible_connection: local
   block:
-    - name: Write/create a secret
+    - name: More testing
+      when:
+        - certmgmt_provision_return_object is defined
+        - certmgmt_provision_return_object | length > 0
+      ansible.builtin.debug:
+        msg:
+          - '{{ certmgmt_provision_return_object | community.general.json_query(json_query) }}'
+      vars:
+        json_query: "[?certmgmt_common_name=='{{ item.certmgmt_common_name }}']"
+
+    - name: Write certificates to Vault
       community.hashi_vault.vault_write:
-        path: '{{ certmgmt_vault_path }}'
+        path: '{{ item.certmgmt_vault_path }}'
         data:
-          private_key: '{{ certmgmt_private_key }}'
-          certificate: '{{ certmgmt_new_cert }}'
-          chain: '{{ certmgmt_fullchain }}'
+          private_key: '{{ certmgmt_provision_return_object | community.general.json_query(key_query) }}'
+          certificate: '{{ certmgmt_provision_return_object | community.general.json_query(certificate_query) }}'
+          chain: '{{ certmgmt_provision_return_object | community.general.json_query(chain_query) }}'
+          common_name: '{{ item.certmgmt_common_name }}'
+      vars:
+        key_query: "[?certmgmt_common_name=='{{ item.certmgmt_common_name }}'].certmgmt_private_key | [0]"
+        chain_query: "[?certmgmt_common_name=='{{ item.certmgmt_common_name }}'].certmgmt_chain | [0]"
+        certificate_query: "[?certmgmt_common_name=='{{ item.certmgmt_common_name }}'].certmgmt_cert | [0]"
