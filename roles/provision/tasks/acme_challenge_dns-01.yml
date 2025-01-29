@@ -58,10 +58,11 @@
         remaining_days: '{{ certmgmt_acme_remaining_days | default(omit) }}'
         force: '{{ certmgmt_acme_force | default(omit) }}'
         terms_agreed: true
-        deactivate_authzs: true
+        deactivate_authzs: '{{ certmgmt_acme_deactivate_authzs }}'
         data: '{{ certmgmt_acme_challenge }}'
         retrieve_all_alternates: true
         select_chain: '{{ certmgmt_acme_select_chain | default(omit) }}'
+        request_timeout: '{{ certmgmt_acme_request_timeout }}'
 
     - name: Cloudflare DNS challenge
       when: certmgmt_acme_challenge_provider == "cloudflare"

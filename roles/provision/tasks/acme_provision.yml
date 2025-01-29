@@ -32,6 +32,7 @@
     force: '{{ certmgmt_acme_force | default(omit) }}'
     acme_version: 2
     terms_agreed: true
+    request_timeout: '{{ certmgmt_acme_request_timeout }}'
   register: certmgmt_acme_challenge
 
 ################################### Challenge Handling ###################################
