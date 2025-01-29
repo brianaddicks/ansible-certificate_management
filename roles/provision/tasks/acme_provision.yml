@@ -7,9 +7,9 @@
 - name: '{{ this_certificate.certmgmt_common_name }}: Generate private key'
   community.crypto.openssl_privatekey_pipe:
     cipher: auto
-    type: '{{ certmgmt_private_key_type | default(omit) }}'
-    size: '{{ certmgmt_private_key_size | default(omit) }}'
-    curve: '{{ certmgmt_private_key_curve | default(omit) }}'
+    type: '{{ this_certificate.certmgmt_private_key_type | default(omit) }}'
+    size: '{{ this_certificate.certmgmt_private_key_size | default(omit) }}'
+    curve: '{{ this_certificate.certmgmt_private_key_curve | default(omit) }}'
   register: certmgmt_private_key
 
 - name: '{{ this_certificate.certmgmt_common_name }}: Generate CSR'
