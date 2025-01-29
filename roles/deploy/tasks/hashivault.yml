@@ -6,25 +6,27 @@
   vars:
     ansible_connection: local
   block:
-    - name: More testing
+    - name: Get first certificate when no common name is defined
       when:
         - certmgmt_provision_return_object is defined
         - certmgmt_provision_return_object | length > 0
-      ansible.builtin.debug:
-        msg:
-          - '{{ certmgmt_provision_return_object | community.general.json_query(json_query) }}'
+        - item.certmgmt_common_name is not defined
+      ansible.builtin.set_fact:
+        certmgmt_this_cert: '{{ certmgmt_provision_return_object | first }}'
+        certmgmt_this_vault_path: '{{ certmgmt_vault_path }}'
+
+    - name: Get certificate by common name
+      when:
+        - certmgmt_provision_return_object is defined
+        - certmgmt_provision_return_object | length > 0
+        - item.certmgmt_common_name is defined
+      ansible.builtin.set_fact:
+        certmgmt_this_cert: '{{ certmgmt_provision_return_object | community.general.json_query(json_query) | first }}'
+        certmgmt_this_vault_path: '{{ item.certmgmt_vault_path }}'
       vars:
-        json_query: "[?certmgmt_common_name=='{{ item.certmgmt_common_name }}']"
+        json_query: "[?common_name=='{{ item.certmgmt_common_name }}']"
 
     - name: Write certificates to Vault
       community.hashi_vault.vault_write:
-        path: '{{ item.certmgmt_vault_path }}'
-        data:
-          private_key: '{{ certmgmt_provision_return_object | community.general.json_query(key_query) }}'
-          certificate: '{{ certmgmt_provision_return_object | community.general.json_query(certificate_query) }}'
-          chain: '{{ certmgmt_provision_return_object | community.general.json_query(chain_query) }}'
-          common_name: '{{ item.certmgmt_common_name }}'
-      vars:
-        key_query: "[?certmgmt_common_name=='{{ item.certmgmt_common_name }}'].certmgmt_private_key | [0]"
-        chain_query: "[?certmgmt_common_name=='{{ item.certmgmt_common_name }}'].certmgmt_chain | [0]"
-        certificate_query: "[?certmgmt_common_name=='{{ item.certmgmt_common_name }}'].certmgmt_cert | [0]"
+        path: '{{ certmgmt_this_vault_path }}'
+        data: '{{ certmgmt_this_cert }}'

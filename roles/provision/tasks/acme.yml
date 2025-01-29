@@ -7,11 +7,9 @@
   vars:
     ansible_connection: local
   block:
-    - name: Import account key tasks
-      ansible.builtin.include_tasks:
-        file: 'acme_account_key.yml'
-
     - name: Import certificate provision tasks
       loop: '{{ certmgmt_certificates }}'
+      loop_control:
+        loop_var: this_certificate
       ansible.builtin.include_tasks:
         file: 'acme_provision.yml'

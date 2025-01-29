@@ -5,57 +5,82 @@
   vars:
     ansible_connection: local
   block:
-    - name: '{{ item.certmgmt_common_name }}: Create DNS record on Cloudflare'
+    - name: '{{ this_certificate.certmgmt_common_name }}: Cloudflare DNS challenge'
       when: certmgmt_acme_challenge_provider == "cloudflare"
-      community.general.cloudflare_dns:
-        domain: '{{ certmgmt_acme_challenge_dns_zone }}'
-        record: '{{ item.key }}'
-        type: TXT
-        ttl: 60
-        value: '{{ item.value[0] }}'
-        solo: true
-        state: present
-      register: certmgmt_acme_challenge_status
-      loop: '{{ certmgmt_acme_challenge.challenge_data_dns | ansible.builtin.dict2items }}'
+      block:
+        - name: '{{ this_certificate.certmgmt_common_name }}: Create custom TXT records'
+          when:
+            - this_certificate.certmgmt_acme_dns_challenge_records is defined
+            - this_certificate.certmgmt_acme_dns_challenge_records | length > 0
+          community.general.cloudflare_dns:
+            domain: '{{ certmgmt_acme_challenge_dns_zone }}'
+            record: '{{ item.txt }}'
+            type: TXT
+            ttl: 60
+            value: '{{ certmgmt_acme_challenge.challenge_data_dns[item.cname][0] }}'
+            solo: true
+            state: present
+          register: certmgmt_acme_challenge_cname_txt_status
+          loop: '{{ this_certificate.certmgmt_acme_dns_challenge_records }}'
 
-    #     - name: Debug output
-    # ansible.builtin.debug:
-    #   msg:
-    #     - '{{ item.key }}'
-    #     - '{{ item.value[0] }}'
-    # loop: '{{ certmgmt_acme_challenge.challenge_data_dns | ansible.builtin.dict2items }}'
+        - name: '{{ this_certificate.certmgmt_common_name }}: Create TXT records'
+          when: this_certificate.certmgmt_acme_dns_challenge_records is not defined
+          community.general.cloudflare_dns:
+            domain: '{{ certmgmt_acme_challenge_dns_zone }}'
+            record: '{{ item.key }}'
+            type: TXT
+            ttl: 60
+            value: '{{ item.value[0] }}'
+            solo: true
+            state: present
+          register: certmgmt_acme_challenge_status
+          loop: '{{ certmgmt_acme_challenge.challenge_data_dns | ansible.builtin.dict2items }}'
 
-    - name: '{{ item.certmgmt_common_name }}: Give DNS records 60 seconds'
+    - name: '{{ this_certificate.certmgmt_common_name }}: Give DNS records 60 seconds'
       ansible.builtin.pause:
         seconds: 60
 
-    - name: '{{ item.certmgmt_common_name }}: Validate challenge and download certs'
-      when: certmgmt_acme_challenge_status is changed # noqa: no-handler
+    - name: '{{ this_certificate.certmgmt_common_name }}: Validate challenge and download certs'
+      when: certmgmt_acme_challenge_status is changed
+        or certmgmt_acme_challenge_cname_txt_status is changed # noqa: no-handler
       retries: 4
       delay: 15
-      register: result
-      until: result is not failed
+      register: certmgmt_acme_result
+      until: certmgmt_acme_result is not failed
       community.crypto.acme_certificate:
         account_key_content: '{{ certmgmt_acme_account_key }}'
         account_email: '{{ certmgmt_acme_email }}'
         csr_content: '{{ certmgmt_csr.csr }}'
         dest: '{{ certmgmt_cert_dest_path }}'
-        fullchain_dest: '{{ certmgmt_fullchain_dest_path }}'
-        chain: '{{ certmgmt_chain_dest_path }}'
         challenge: dns-01
         acme_directory: '{{ certmgmt_acme_directory }}'
+        acme_version: 2
         remaining_days: '{{ certmgmt_acme_remaining_days | default(omit) }}'
         force: '{{ certmgmt_acme_force | default(omit) }}'
-        acme_version: 2
         terms_agreed: true
         deactivate_authzs: true
         data: '{{ certmgmt_acme_challenge }}'
+        retrieve_all_alternates: true
 
-    - name: '{{ item.certmgmt_common_name }}: Delete DNS record on Cloudflare'
-      when: certmgmt_acme_challenge_status is changed # noqa: no-handler
-      community.general.cloudflare_dns:
-        domain: '{{ certmgmt_acme_challenge_dns_zone }}'
-        record: "{{ certmgmt_acme_challenge.challenge_data[certmgmt_common_name]['dns-01'].record }}"
-        type: TXT
-        value: "{{ certmgmt_acme_challenge.challenge_data[certmgmt_common_name]['dns-01'].resource_value }}"
-        state: absent
+    - name: Cloudflare DNS challenge
+      when: certmgmt_acme_challenge_provider == "cloudflare"
+      block:
+        - name: '{{ this_certificate.certmgmt_common_name }}: Delete TXT records'
+          when: certmgmt_acme_challenge_status is changed # noqa: no-handler
+          loop: '{{ certmgmt_acme_challenge.challenge_data_dns | ansible.builtin.dict2items }}'
+          community.general.cloudflare_dns:
+            domain: '{{ certmgmt_acme_challenge_dns_zone }}'
+            record: '{{ item.key }}'
+            type: TXT
+            value: '{{ item.value[0] }}'
+            state: absent
+
+        - name: '{{ this_certificate.certmgmt_common_name }}: Delete custom TXT records'
+          when: certmgmt_acme_challenge_cname_txt_status is changed # noqa: no-handler
+          loop: '{{ this_certificate.certmgmt_acme_dns_challenge_records }}'
+          community.general.cloudflare_dns:
+            domain: '{{ certmgmt_acme_challenge_dns_zone }}'
+            record: '{{ item.txt }}'
+            type: TXT
+            value: '{{ certmgmt_acme_challenge.challenge_data_dns[item.cname][0] }}'
+            state: absent

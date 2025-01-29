@@ -16,5 +16,6 @@ skip_list:
   - yaml[line-length]
   - jinja[invalid]
   - name[template]
+  - var-naming[no-role-prefix]
 parseable: true
 use_default_rules: true

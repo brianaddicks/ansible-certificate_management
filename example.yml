@@ -1,13 +1,38 @@
 ---
-- name: Update certificates in Vault
-  hosts: hashivault
+- name: Create ACME account key and store in Vault
+  hosts: createacmeaccount2
   gather_facts: false
 
   tasks:
-    # - name: Discover cert info
-    #   ansible.builtin.include_role:
-    #     name: discover
+    - name: Provision certs
+      ansible.builtin.include_role:
+        name: provision
 
+    - name: Deploy certs
+      ansible.builtin.include_role:
+        name: deploy
+
+          #       - name: '{{ this_certificate.certmgmt_common_name }}: Create CNAME record'
+          # when:
+          #   - this_certificate.certmgmt_acme_dns_create_cname
+          #   - this_certificate.certmgmt_acme_dns_challenge_records is defined
+          #   - this_certificate.certmgmt_acme_dns_challenge_records | length > 0
+          # community.general.cloudflare_dns:
+          #   domain: '{{ certmgmt_acme_challenge_dns_zone }}'
+          #   record: '{{ item.cname }}'
+          #   type: CNAME
+          #   ttl: 60
+          #   value: '{{ item.txt }}'
+          #   solo: true
+          #   state: present
+          # loop: '{{ this_certificate.certmgmt_acme_dns_challenge_records }}'
+
+
+- name: Get certificates from Lets Encrypt and store in Vault
+  hosts: vaultcerts
+  gather_facts: false
+
+  tasks:
     - name: Provision certs
       ansible.builtin.include_role:
         name: provision

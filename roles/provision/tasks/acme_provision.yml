@@ -4,32 +4,25 @@
 # some of the openssl modules require outputting to a file
 # all files are deleted by the last task
 
-- name: '{{ item.certmgmt_common_name }}: Generate private key for'
+- name: '{{ this_certificate.certmgmt_common_name }}: Generate private key'
   community.crypto.openssl_privatekey_pipe:
     cipher: auto
   register: certmgmt_private_key
 
-- name: '{{ item.certmgmt_common_name }}: Generate CSR'
+- name: '{{ this_certificate.certmgmt_common_name }}: Generate CSR'
   community.crypto.openssl_csr_pipe:
     privatekey_content: '{{ certmgmt_private_key.privatekey }}'
-    common_name: '{{ item.certmgmt_common_name }}'
-    subject_alt_name: '{{ item.certmgmt_subject_alt_name | default(omit) }}'
+    common_name: '{{ this_certificate.certmgmt_common_name }}'
+    subject_alt_name: '{{ this_certificate.certmgmt_subject_alt_name | default(omit) }}'
   register: certmgmt_csr
 
-- name: '{{ item.certmgmt_common_name }}: Setup facts for temporary file destinations'
-  ansible.builtin.set_fact:
-    certmgmt_fullchain_dest_path: "{{ item.certmgmt_cert_dest_path | default(item.certmgmt_common_name + '-certmgmt_fullchain.crt') }}"
-    certmgmt_chain_dest_path: "{{ item.certmgmt_chain_dest_path | default(item.certmgmt_common_name + '-certmgmt_chain.crt') }}"
-    certmgmt_cert_dest_path: "{{ item.certmgmt_cert_dest_path | default(item.certmgmt_common_name + '-certmgmt_cert.crt') }}"
-
-- name: '{{ item.certmgmt_common_name }}: Submit order to ACME directory'
+- name: '{{ this_certificate.certmgmt_common_name }}: Submit order to ACME directory'
   community.crypto.acme_certificate:
     account_key_content: '{{ certmgmt_acme_account_key }}'
     account_email: '{{ certmgmt_acme_email }}'
     account_uri: '{{ certmgmt_acme_account_uri | default(omit) }}'
     csr_content: '{{ certmgmt_csr.csr }}'
     dest: '{{ certmgmt_cert_dest_path }}'
-    fullchain_dest: '{{ certmgmt_fullchain_dest_path }}'
     challenge: '{{ certmgmt_acme_challenge_type }}'
     acme_directory: '{{ certmgmt_acme_directory }}'
     remaining_days: '{{ certmgmt_acme_remaining_days | default(omit) }}'
@@ -40,35 +33,29 @@
 
 ################################### Challenge Handling ###################################
 
-- name: '{{ item.certmgmt_common_name }}: Import approriate challenge task'
+- name: '{{ this_certificate.certmgmt_common_name }}: Import approriate challengbe task'
   ansible.builtin.include_tasks:
     file: 'acme_challenge_{{ certmgmt_acme_challenge_type }}.yml'
   vars:
-    certmgmt_common_name: '{{ item.certmgmt_common_name }}'
+    certmgmt_common_name: '{{ this_certificate.certmgmt_common_name }}'
 
 ################################# End Challenge Handling #################################
 
-- name: '{{ item.certmgmt_common_name }}: Get information on generated certificate'
+- name: '{{ this_certificate.certmgmt_common_name }}: Get information on generated certificate'
   community.crypto.x509_certificate_info:
-    content: "{{ lookup('ansible.builtin.file', certmgmt_cert_dest_path) }}"
+    content: '{{ certmgmt_acme_result.all_chains[0].cert }}'
   register: certmgmt_info
+  delegate_to: localhost
 
-- name: '{{ item.certmgmt_common_name }}: Load cert info into variables'
+- name: '{{ this_certificate.certmgmt_common_name }}: Load cert info into variables'
   ansible.builtin.set_fact:
     certmgmt_provision_return_object: '{{ certmgmt_provision_return_object | default([]) + [certmgmt_this_cert] }}'
   vars:
     certmgmt_this_cert:
-      certmgmt_chain: "{{ lookup('ansible.builtin.file', certmgmt_fullchain_dest_path) }}"
-      certmgmt_cert: "{{ lookup('ansible.builtin.file', certmgmt_cert_dest_path) }}"
-      certmgmt_private_key: '{{ certmgmt_private_key.privatekey }}'
-      certmgmt_info: '{{ certmgmt_info }}'
-      certmgmt_common_name: '{{ item.certmgmt_common_name }}'
-
-- name: '{{ item.certmgmt_common_name }}: Clean up files'
-  ansible.builtin.file:
-    path: '{{ item }}'
-    state: absent
-  loop:
-    - '{{ certmgmt_fullchain_dest_path }}'
-    - '{{ certmgmt_chain_dest_path }}'
-    - '{{ certmgmt_cert_dest_path }}'
+      chain: '{{ certmgmt_acme_result.all_chains[0].chain }}'
+      cert: '{{ certmgmt_acme_result.all_chains[0].cert }}'
+      private_key: '{{ certmgmt_private_key.privatekey }}'
+      info: '{{ certmgmt_info }}'
+      common_name: '{{ this_certificate.certmgmt_common_name }}'
+      expires_on: '{{ certmgmt_info.not_before }}'
+  delegate_to: localhost

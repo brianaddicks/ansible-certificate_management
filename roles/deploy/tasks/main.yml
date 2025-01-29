@@ -1,10 +1,22 @@
 ---
 # tasks file for deploy
+- name: Load certificates from provision role
+  when:
+    - certmgmt_provision_return_object is defined
+    - certmgmt_provision_return_object | length > 0
+  loop: "{{ certmgmt_provision_return_object }}"
+  ansible.builtin.set_fact:
+    certmgmt_deploy_loop_list: "{{ certmgmt_provision_return_object }}"
 
-- name: "Import certificate deploy tasks for: {{ certmgmt_device_type }}"
+- name: "Loop through certificates from inventory"
   when:
     - certmgmt_certificates is defined
     - certmgmt_certificates | length > 0
   loop: "{{ certmgmt_certificates }}"
+  ansible.builtin.set_fact:
+    certmgmt_deploy_loop_list: "{{ certmgmt_certificates }}"
+
+- name: "Loop through certificates"
+  loop: "{{ certmgmt_deploy_loop_list }}"
   ansible.builtin.include_tasks:
     file: "{{ certmgmt_device_type }}.yml"
