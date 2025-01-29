@@ -1,0 +1,15 @@
+- name: Pre-Stage CNAME records
+  vars:
+    ansible_connection: local
+  when:
+    - this_certificate.certmgmt_acme_dns_challenge_records is defined
+    - this_certificate.certmgmt_acme_dns_challenge_records | length > 0
+  community.general.cloudflare_dns:
+    domain: '{{ certmgmt_acme_challenge_dns_zone }}'
+    record: '{{ item.cname }}'
+    type: CNAME
+    ttl: 60
+    value: '{{ item.txt }}'
+    solo: true
+    state: present
+  loop: '{{ this_certificate.certmgmt_acme_dns_challenge_records }}'

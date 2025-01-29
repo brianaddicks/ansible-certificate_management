@@ -12,27 +12,18 @@
       ansible.builtin.include_role:
         name: deploy
 
-          #       - name: '{{ this_certificate.certmgmt_common_name }}: Create CNAME record'
-          # when:
-          #   - this_certificate.certmgmt_acme_dns_create_cname
-          #   - this_certificate.certmgmt_acme_dns_challenge_records is defined
-          #   - this_certificate.certmgmt_acme_dns_challenge_records | length > 0
-          # community.general.cloudflare_dns:
-          #   domain: '{{ certmgmt_acme_challenge_dns_zone }}'
-          #   record: '{{ item.cname }}'
-          #   type: CNAME
-          #   ttl: 60
-          #   value: '{{ item.txt }}'
-          #   solo: true
-          #   state: present
-          # loop: '{{ this_certificate.certmgmt_acme_dns_challenge_records }}'
-
-
 - name: Get certificates from Lets Encrypt and store in Vault
   hosts: vaultcerts
   gather_facts: false
 
   tasks:
+    - name: Import certificate provision tasks
+      loop: '{{ certmgmt_certificates }}'
+      loop_control:
+        loop_var: this_certificate
+      ansible.builtin.include_tasks:
+        file: 'example_create_cloudflare_cname.yml'
+
     - name: Provision certs
       ansible.builtin.include_role:
         name: provision
