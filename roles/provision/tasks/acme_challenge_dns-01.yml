@@ -61,6 +61,7 @@
         deactivate_authzs: true
         data: '{{ certmgmt_acme_challenge }}'
         retrieve_all_alternates: true
+        select_chain: '{{ certmgmt_acme_select_chain | default(omit) }}'
 
     - name: Cloudflare DNS challenge
       when: certmgmt_acme_challenge_provider == "cloudflare"
