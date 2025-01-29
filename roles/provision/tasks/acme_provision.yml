@@ -7,6 +7,9 @@
 - name: '{{ this_certificate.certmgmt_common_name }}: Generate private key'
   community.crypto.openssl_privatekey_pipe:
     cipher: auto
+    type: '{{ certmgmt_private_key_type | default(omit) }}'
+    size: '{{ certmgmt_private_key_size | default(omit) }}'
+    curve: '{{ certmgmt_private_key_curve | default(omit) }}'
   register: certmgmt_private_key
 
 - name: '{{ this_certificate.certmgmt_common_name }}: Generate CSR'
@@ -57,5 +60,7 @@
       private_key: '{{ certmgmt_private_key.privatekey }}'
       info: '{{ certmgmt_info }}'
       common_name: '{{ this_certificate.certmgmt_common_name }}'
-      expires_on: '{{ certmgmt_info.not_before }}'
+      not_before: '{{ certmgmt_info.not_before }}'
+      not_after: '{{ certmgmt_info.not_after }}'
+      subject_alt_name: '{{ certmgmt_info.subject_alt_name }}'
   delegate_to: localhost

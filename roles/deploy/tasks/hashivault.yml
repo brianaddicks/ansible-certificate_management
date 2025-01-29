@@ -14,6 +14,7 @@
       ansible.builtin.set_fact:
         certmgmt_this_cert: '{{ certmgmt_provision_return_object | first }}'
         certmgmt_this_vault_path: '{{ certmgmt_vault_path }}'
+        certmgmt_this_vault_mount_point: '{{ certmgmt_vault_mount_point }}'
 
     - name: Get certificate by common name
       when:
@@ -23,10 +24,25 @@
       ansible.builtin.set_fact:
         certmgmt_this_cert: '{{ certmgmt_provision_return_object | community.general.json_query(json_query) | first }}'
         certmgmt_this_vault_path: '{{ item.certmgmt_vault_path }}'
+        certmgmt_this_vault_mount_point: '{{ item.certmgmt_vault_mount_point }}'
       vars:
         json_query: "[?common_name=='{{ item.certmgmt_common_name }}']"
 
     - name: Write certificates to Vault
-      community.hashi_vault.vault_write:
+      community.hashi_vault.vault_kv2_write:
+        engine_mount_point: '{{ certmgmt_this_vault_mount_point }}'
         path: '{{ certmgmt_this_vault_path }}'
-        data: '{{ certmgmt_this_cert }}'
+        data:
+          cert: '{{ certmgmt_this_cert.cert }}'
+          chain: '{{ certmgmt_this_cert.chain }}'
+          private_key: '{{ certmgmt_this_cert.private_key }}'
+
+    - name: Write metadata to Vault secret
+      community.hashi_vault.vault_write:
+        path: '{{ certmgmt_this_vault_mount_point }}/metadata/{{ certmgmt_this_vault_path }}'
+        data:
+          custom_metadata:
+            common_name: '{{ certmgmt_this_cert.common_name }}'
+            subject_alt_name: '{{ certmgmt_this_cert.subject_alt_name  | join("\n") }}'
+            not_before: '{{ certmgmt_this_cert.not_before }}'
+            not_after: '{{ certmgmt_this_cert.not_after }}'
